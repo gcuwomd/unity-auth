@@ -8,6 +8,8 @@ spring:
     redis:
       host: 127.0.0.1
       password: redis-password
+  main:
+    allow-bean-definition-overriding: true
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
   type-aliases-package: com.example.unityauth.mapper
