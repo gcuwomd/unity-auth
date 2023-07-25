@@ -13,6 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
@@ -22,6 +24,7 @@ import org.springframework.security.oauth2.server.authorization.client.InMemoryR
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
+import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
@@ -71,6 +74,7 @@ public class SecurityConfig {
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
         http
                 // Redirect to the login page when not authenticated from the
                 // authorization endpoint
@@ -88,17 +92,17 @@ public class SecurityConfig {
      * @return
      * @throws Exception
      */
-//    @Bean
-//    @Order(2)
-//    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
-//            throws Exception {
-//        http
-//                .authorizeHttpRequests((authorize) -> authorize
-//                        .anyRequest().authenticated()
-//                ).formLogin(formLogin->formLogin.loginPage("/login.html"));
-//
-//        return http.build();
-//    }
+    @Bean
+    @Order(2)
+    public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
+            throws Exception {
+        http.formLogin(formLogin->formLogin.loginPage("/login.html"))
+                .authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login.html","/_next/**").permitAll()
+                        .anyRequest().authenticated()
+                );
+
+        return http.build();
+    }
 
     /**
      * 配置用户信息，或者配置用户数据来源，主要用于用户的检索。
@@ -107,8 +111,8 @@ public class SecurityConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         UserDetails userDetails = User.withDefaultPasswordEncoder()
-                .username("user")
-                .password("passwords")
+                .username("202010089000")
+                .password("{noop}admin123")
                 .roles("USER")
                 .build();
 
@@ -173,6 +177,20 @@ public class SecurityConfig {
     }
 
     @Bean
+    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
+        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
+    }
+    @Bean
+    public AuthorizationServerSettings authorizationServerSettings() {
+        return AuthorizationServerSettings.builder().build();
+    }
+    @Bean
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
+
+    @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> accessTokenCustomizer() {
         return context -> {
 //            JwtClaimsSet.Builder claims = context.getClaims();
@@ -185,31 +203,9 @@ public class SecurityConfig {
 
         };
     }
-    /**
-     * 添加认证服务器配置，设置jwt签发者、默认端点请求地址等
-     *
-     * @return AuthorizationServerSettings
-     */
-    /**
-     * 添加认证服务器配置，设置jwt签发者、默认端点请求地址等
-     *
-     * @return AuthorizationServerSettings
-     */
-    @Bean
-    public AuthorizationServerSettings authorizationServerSettings() {
-        return AuthorizationServerSettings.builder()
-                /*
-                    设置token签发地址(http(s)://{ip}:{port}/context-path, http(s)://domain.com/context-path)
-                    如果需要通过ip访问这里就是ip，如果是有域名映射就填名，通过什么方式访问该服务这里就填什么
-                 */
-                .issuer("http://127.0.0.1:8080")
-                .build();
-    }
 
-    @Bean
-    public JwtDecoder jwtDecoder(JWKSource<SecurityContext> jwkSource) {
-        return OAuth2AuthorizationServerConfiguration.jwtDecoder(jwkSource);
-    }
+
+
 
 
 
