@@ -96,8 +96,8 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        http.formLogin(formLogin->formLogin.loginPage("/login.html"))
-                .authorizeHttpRequests((authorize) -> authorize.requestMatchers("/login.html","/_next/**").permitAll()
+        http.formLogin(formLogin->formLogin.loginPage("/index.html"))
+                .authorizeHttpRequests((authorize) -> authorize.requestMatchers("/index.html","/_next/**").permitAll()
                         .anyRequest().authenticated()
                 );
 
