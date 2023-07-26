@@ -1,4 +1,8 @@
 spring:
+  thymeleaf:
+    mode: HTML5
+    prefix: classpath:/templates/
+    encoding: UTF-8
   datasource:
     url: jdbc:mysql://localhost:3306/simulator
     username: root

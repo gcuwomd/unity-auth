@@ -7,6 +7,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
+import org.springframework.http.MediaType;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
@@ -14,6 +15,7 @@ import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
@@ -34,6 +36,7 @@ import org.springframework.security.oauth2.server.authorization.token.OAuth2Toke
 import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
+import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
 
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
@@ -75,12 +78,15 @@ public class SecurityConfig {
             throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults());
+                //设置授权页
+//                .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage(""));
         http
-                // Redirect to the login page when not authenticated from the
-                // authorization endpoint
+                // 当未登录时访问认证端点时重定向至login页面
                 .exceptionHandling((exceptions) -> exceptions
-                        .authenticationEntryPoint(
-                                new LoginUrlAuthenticationEntryPoint("/index.html"))
+                        .defaultAuthenticationEntryPointFor(
+                                new LoginUrlAuthenticationEntryPoint("/login"),
+                                new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
+                        )
                 );
 
         return http.build();
@@ -96,27 +102,14 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        http.formLogin(formLogin->formLogin.loginPage("/index.html"))
-                .authorizeHttpRequests((authorize) -> authorize.requestMatchers("/index.html","/_next/**").permitAll()
+        http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login"))
+//        http.formLogin(Customizer.withDefaults())
+                .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("login").permitAll()
                         .anyRequest().authenticated()
                 );
 
         return http.build();
-    }
-
-    /**
-     * 配置用户信息，或者配置用户数据来源，主要用于用户的检索。
-     * @return
-     */
-    @Bean
-    public UserDetailsService userDetailsService() {
-        UserDetails userDetails = User.withDefaultPasswordEncoder()
-                .username("202010089000")
-                .password("{noop}admin123")
-                .roles("USER")
-                .build();
-
-        return new InMemoryUserDetailsManager(userDetails);
     }
 
     /**
