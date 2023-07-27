@@ -4,9 +4,9 @@ spring:
     prefix: classpath:/templates/
     encoding: UTF-8
   datasource:
-    url: jdbc:mysql://localhost:3306/simulator
+    url: jdbc:mysql://43.139.117.216:3306/simulator
     username: root
-    password: password
+    password: wzwzywb
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -14,6 +14,7 @@ spring:
       password: redis-password
   main:
     allow-bean-definition-overriding: true
+
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
   type-aliases-package: com.example.unityauth.mapper

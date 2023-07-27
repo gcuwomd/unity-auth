@@ -1,13 +1,15 @@
 package com.example.unityauth.pojo;
 
+import org.springframework.context.annotation.Configuration;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 
+import java.io.Serializable;
 import java.util.Collection;
 
-public class LoginUser implements UserDetails {
-    User user;
+public class LoginUser implements UserDetails, Serializable {
+    private  User user;
 
     public LoginUser(User user) {
         this.user = user;

@@ -18,7 +18,7 @@ public class userDetailServiceimp implements UserDetailsService {
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
         String s=passwordEncoder.encode("admin123");
 //        s="{bcrypt}"+s;
-        return  new LoginUser(new User("202110098171",s, AuthorityUtils.commaSeparatedStringToAuthorityList(
-                "admin")));
+        return  new User("202110098171",s, AuthorityUtils.commaSeparatedStringToAuthorityList(
+                "admin"));
     }
 }
