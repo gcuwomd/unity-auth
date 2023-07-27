@@ -5,7 +5,8 @@
     <!-- --------------------------------- -->
     <link
       rel="stylesheet"
-      th:href="@{../static/css/login.css}"
+      href="../static/css/login.css"
+      th:href="@{/css/login.css}"
     />
     <title>Document</title>
   </head>
@@ -13,17 +14,17 @@
     <form action="" method="post" th:action="@{/login}">
       <div class="container">
         <div class="logo-box">
-          <img th:src="@{../static/gcu-womd.png}" alt="" />
+          <img th:src="@{/gcu-womd.png}" alt="" />
           <h3>网站运维部统一登录平台</h3>
         </div>
         <div class="login-box">
           <div class="input-box">
-            <input type="text" placeholder="请输入学号" id="accountId" />
+            <input type="text" placeholder="请输入学号" id="accountId"  name="username" />
           </div>
           <br />
           <span th:if="${param.error}" class="accountErr">学号输入错误</span>
           <div class="input-box">
-            <input type="password" placeholder="请输入密码" id="passwordId" />
+            <input type="password" placeholder="请输入密码" id="passwordId" name="password"/>
           </div>
           <span th:if="${param.error}" class="pswErr">密码输入错误</span>
           <br />

@@ -3,10 +3,11 @@ spring:
     mode: HTML5
     prefix: classpath:/templates/
     encoding: UTF-8
+    suffix: .html
   datasource:
-    url: jdbc:mysql://43.139.117.216:3306/simulator
+    url: jdbc:mysql://43.139.117.216:4406/simulator
     username: root
-    password: wzwzywb
+    password: xzwzywb
     driver-class-name: com.mysql.cj.jdbc.Driver
   data:
     redis:
@@ -14,6 +15,14 @@ spring:
       password: redis-password
   main:
     allow-bean-definition-overriding: true
+  web:
+    resources:
+      static-locations: classpath:/static/
+      chain:
+        strategy:
+          content:
+            mime-type:
+              css: text/css
 
 mybatis:
   mapper-locations: classpath:mapper/*Mapper.xml
