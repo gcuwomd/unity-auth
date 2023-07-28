@@ -118,3 +118,11 @@ const messageBox = queryAll('.message-box')
 messageBox.forEach((item) => {
   item.addEventListener('click', close)
 })
+
+const rejectButton = query('.reject')
+rejectButton.addEventListener('click', () => {
+  const link = document.createElement('a');
+  // 导航页网址
+  link.href = ''
+  link.click()
+})

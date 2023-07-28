@@ -151,3 +151,33 @@ main {
 .message-box span {
   font-size: 14px;
 }
+
+.form-container section span {
+  font-weight: 700;
+}
+
+.form-container section ul {
+  margin-top: 24px;
+  color: rgba(0, 0, 0, 0.6);
+  list-style: inside;
+}
+
+
+/* ------------------- continue.html ------------------- */
+.button-group {
+  margin-top: 24px;
+  display: flex;
+  justify-content: space-between;
+}
+.button-group button {
+  width: 100px;
+}
+.button-group .reject {
+  background-color: #ff4d4f;
+}
+.button-group .reject:hover {
+  background-color: #ff7875;
+}
+.button-group .reject:active {
+  background-color: #d9363e;
+}
