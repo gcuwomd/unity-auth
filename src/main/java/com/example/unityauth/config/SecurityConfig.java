@@ -123,7 +123,7 @@ public class SecurityConfig {
         http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login"))
 //        http.formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("login","/css/**","/gcu-womd.png").permitAll()
+                        .requestMatchers("login","/css/**","/image/**","/js/**").permitAll()
                         .anyRequest().authenticated()
                 );
 

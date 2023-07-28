@@ -1,36 +1,62 @@
 <!DOCTYPE html>
-<html lang="en" xmlns:th="http://www.thymeleaf.org">
-  <head>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
+<head>
+  <link rel="stylesheet" th:href="@{/css/style.css}"}>
+  <title>Document</title>
+</head>
 
-    <!-- --------------------------------- -->
-    <link
-      rel="stylesheet"
-      href="../static/css/login.css"
-      th:href="@{/css/login.css}"
-    />
-    <title>Document</title>
-  </head>
-  <body>
-    <form action="" method="post" th:action="@{/login}">
-      <div class="container">
-        <div class="logo-box">
-          <img th:src="@{/gcu-womd.png}" alt="" />
-          <h3>网站运维部统一登录平台</h3>
+<body>
+  <main>
+    <div class="container">
+      <section class="header">
+        <div>
+          <img th:src="@{/image/gcu-womd.png}" alt="">
         </div>
-        <div class="login-box">
-          <div class="input-box">
-            <input type="text" placeholder="请输入学号" id="accountId"  name="username" />
+        <h2>网站运维部统一登录平台</h2>
+      </section>
+      <div class="form-container">
+        <form id="form" action="/login" method="POST">
+          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+          <div class="form-item">
+            <div class="label-container">
+              <label for="username">学号</label>
+            </div>
+            <div class="input-container">
+              <input id="username" type="text" placeholder="请输入学号" name="username">
+            </div>
+            <div class="help">
+              <div id="username-help"></div>
+            </div>
           </div>
-          <br />
-          <span th:if="${param.error}" class="accountErr">学号输入错误</span>
-          <div class="input-box">
-            <input type="password" placeholder="请输入密码" id="passwordId" name="password"/>
+          <div>
+            <div class="label-container">
+              <label for="password">密码</label>
+            </div>
+            <div class="input-container">
+              <input id="password" type="password" placeholder="请输入密码" name="password">
+            </div>
+            <div class="help">
+              <div id="password-help"></div>
+            </div>
           </div>
-          <span th:if="${param.error}" class="pswErr">密码输入错误</span>
-          <br />
-          <button class="login">登录</button>
-        </div>
+          <button id="login" type="submit">登录</button>
+        </form>
       </div>
-    </form>
-  </body>
+      <section class="footer">
+        <span>还没有账号？</span>
+        <span class="link">点击快速注册</span>
+      </section>
+    </div>
+    <div class="message-box" th:if="${param.error}">
+      <div>
+        <img th:src="@{/image/error.png}" alt="">
+        <span>账号错误</span>
+      </div>
+      <div class="close"><img th:src="@{/image/close.png}" style="cursor: pointer;"></div>
+    </div>
+    </div>
+  </main>
+  <script th:src="@{/js/main.js}"></script>
+</body>
+
 </html>
