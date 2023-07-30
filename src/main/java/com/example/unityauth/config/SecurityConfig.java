@@ -119,7 +119,7 @@ public class SecurityConfig {
 //        http.formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(HttpMethod.POST,"/user/**").permitAll()
-                        .requestMatchers("login","/css/**","/image/**","/js/**","/user/*").permitAll()
+                        .requestMatchers("login","/css/**","/image/**","/js/**","/user/**").permitAll()
                         .anyRequest().authenticated())
                 .csrf(csrf->csrf.ignoringRequestMatchers("/user/**"));
         return http.build();

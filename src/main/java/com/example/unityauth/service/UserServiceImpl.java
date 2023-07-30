@@ -9,7 +9,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -20,12 +19,9 @@ public class UserServiceImpl implements UserService {
     PasswordEncoder passwordEncoder;
     @Autowired
     EmailUtil emailUtil;
-    private String code;
     @Autowired
     RedisUtil redisUtil;
-
-
-    @Override
+    String code;
     public boolean getCode(String email) {
         code= CodeUtil.createCode();
         emailUtil.sendEmail(email,"验证码",code);
@@ -33,11 +29,6 @@ public class UserServiceImpl implements UserService {
         redisUtil.setExpire(email,300,TimeUnit.SECONDS);
         return true;
     }
-
-   public boolean searchUser(String username){
-     return   userMapper.userExist(username);
-    }
-
     @Override
     public String register(UnityUser unityUser, String code, String email) {
         if (redisUtil.get(email)==(null)){
@@ -54,10 +45,24 @@ public class UserServiceImpl implements UserService {
         return "验证码错误";
     }
 
+    public boolean searchUser(String username){
+        UnityUser user=userMapper.userExist(username);
+        if(user!=null){
+            code=CodeUtil.createCode();
+            emailUtil.sendEmail(user.getEmail(),"验证码",code);
+            redisUtil.set(username,code);
+            redisUtil.setExpire(username,300,TimeUnit.SECONDS);
+            return true;
+        }
+
+
+        return false;
+    }
     @Override
-    public boolean reset(String email,String password) {
-        if (redisUtil.get(email)==null) return false;
+    public boolean reset(String username, String password, String code) {
+        if (redisUtil.get(username)==null) return false;
+        if(!redisUtil.get(username).equals(code)) return  false;
         password=passwordEncoder.encode(password);
-        return   userMapper.reset(email,password);
+        return   userMapper.reset(username,password);
     }
 }

@@ -41,7 +41,8 @@ class UnityAuthApplicationTests {
 	}
 	@Test
 	void reset(){
-		System.out.println(userService.reset("2428015329@qq.com","202110098171"));
+		userService.searchUser("202110098171");
+		System.out.println(userService.reset("202110098171","202110098171","1234"));
 	}
 
 }

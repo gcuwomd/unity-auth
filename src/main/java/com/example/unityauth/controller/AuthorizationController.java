@@ -38,7 +38,7 @@ UserService userimpl;
         model.addAttribute("state", state);
         return "consent";
     }
-    @GetMapping("/user/registerCode")
+    @GetMapping("/user/register/code")
     @ResponseBody
     ResultUtil GetCode(@RequestParam  String email){
         if(userimpl.getCode(email)){
@@ -53,10 +53,10 @@ UserService userimpl;
 
             return ResultUtil.sucess(userimpl.register(unityUser,code,email));
     }
-    @GetMapping("/user/resetCode")
+    @GetMapping("/user/reset/code")
     @ResponseBody
-    ResultUtil reset(@RequestParam  String username){
-            if (userimpl.getCode(username))
+    ResultUtil resetCode(@RequestParam  String username){
+            if (userimpl.searchUser(username))
                 return ResultUtil.sucess();
 
 
@@ -64,10 +64,11 @@ UserService userimpl;
     }
     @PostMapping("/user/reset")
     @ResponseBody
-    ResultUtil register(@RequestBody Map<String,String> map){
-        String email=map.get("email");
+    ResultUtil reset(@RequestBody Map<String,String> map){
+        String code=map.get("code");
+        String username=map.get("username");
         String password=map.get("password");
-       if( userimpl.reset( email,password))
+       if( userimpl.reset( username,password,code))
            return  ResultUtil.sucess();
         return ResultUtil.error();
     }

@@ -4,10 +4,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.example.unityauth.mapper.UserMapper">
     <update id="reset">
-        update unity_user set password=#{password} where email=#{email}
+        update unity_user set password=#{password} where username=#{username}
     </update>
-    <select id="userExist" resultType="java.lang.Boolean">
-        select * from unity_user where username=#{username}
+    <select id="userExist" resultType="com.example.unityauth.pojo.UnityUser">
+        select email from unity_user where username=#{username}
     </select>
     <insert id="register"  >
         insert into unity_user (department_id,username,password,name,phone,email,nick_name,major,grade,class_number,dorm,politicsStatus,avatar)values (
