@@ -5,7 +5,7 @@ import lombok.Data;
 import java.net.URL;
 @Data
 public class UnityUser {
-
+    private String departmentId;
     private String username;
     private String password;
     private String name;

@@ -7,8 +7,8 @@ import java.util.List;
 
 @Mapper
 public interface UserMapper  {
-   List searchUser(String username);
+   boolean userExist(String username);
    boolean register(UnityUser unityUser);
-   boolean reset(UnityUser unityUser);
-   boolean forgetCheck(String username);
+   boolean reset(String email,String password);
+
 }

@@ -6,6 +6,7 @@ import com.example.unityauth.utils.CodeUtil;
 import com.example.unityauth.utils.EmailUtil;
 import com.example.unityauth.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -15,6 +16,8 @@ import java.util.concurrent.TimeUnit;
 public class UserServiceImpl implements UserService {
     @Autowired
     UserMapper userMapper;
+    @Autowired
+    PasswordEncoder passwordEncoder;
     @Autowired
     EmailUtil emailUtil;
     private String code;
@@ -31,17 +34,18 @@ public class UserServiceImpl implements UserService {
         return true;
     }
 
-   public List searchUser(String username){
-     return   userMapper.searchUser(username);
+   public boolean searchUser(String username){
+     return   userMapper.userExist(username);
     }
 
     @Override
     public String register(UnityUser unityUser, String code, String email) {
-        if (redisUtil.get(email).equals(null)){
+        if (redisUtil.get(email)==(null)){
             return "验证码失效";
         }
         if(redisUtil.get(email).equals(code)){
             redisUtil.del(email);
+            unityUser.setPassword(passwordEncoder.encode(unityUser.getPassword()));
             userMapper.register(unityUser);
             return "注册成功";
         }
@@ -51,7 +55,9 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean forget() {
-        return false;
+    public boolean reset(String email,String password) {
+        if (redisUtil.get(email)==null) return false;
+        password=passwordEncoder.encode(password);
+        return   userMapper.reset(email,password);
     }
 }

@@ -3,7 +3,6 @@ package com.example.unityauth.controller;
 import com.example.unityauth.pojo.UnityUser;
 import com.example.unityauth.service.UserService;
 import com.example.unityauth.utils.ResultUtil;
-import jakarta.validation.constraints.Email;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -11,7 +10,6 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.security.Principal;
-import java.util.HashMap;
 import java.util.Map;
 
 
@@ -40,44 +38,37 @@ UserService userimpl;
         model.addAttribute("state", state);
         return "consent";
     }
-    @GetMapping("/register")
+    @GetMapping("/user/registerCode")
     @ResponseBody
-    String test(){
-
-        return "email";
-    }
-    @GetMapping("/getCode")
-    @ResponseBody
-    ResultUtil GetCode(@RequestParam   @Email(message = "请输入有效的邮箱地址") String email){
-       HashMap claim=new HashMap<>();
+    ResultUtil GetCode(@RequestParam  String email){
         if(userimpl.getCode(email)){
-
-            return ResultUtil.sucess();
+    //邮箱验证
+            return new ResultUtil(1,"发送成功",null);
         }
-        return ResultUtil.error();
+        return new ResultUtil(0,"发送失败",null);
     }
     @PostMapping("/user/register")
     @ResponseBody
     ResultUtil register(@RequestBody UnityUser unityUser, @RequestParam String code,String email){
 
-
-
-            return ResultUtil.sucess();
+            return ResultUtil.sucess(userimpl.register(unityUser,code,email));
     }
-    @GetMapping("/user/forget")
+    @GetMapping("/user/resetCode")
     @ResponseBody
-    HashMap forget(@RequestParam  String username){
-        HashMap claim=new HashMap<>();
+    ResultUtil reset(@RequestParam  String username){
+            if (userimpl.getCode(username))
+                return ResultUtil.sucess();
 
-        return claim;
+
+        return ResultUtil.error();
     }
     @PostMapping("/user/reset")
     @ResponseBody
-    HashMap register(@RequestBody Map maps){
-        HashMap map=new HashMap();
-
-
-
-        return map;
+    ResultUtil register(@RequestBody Map<String,String> map){
+        String email=map.get("email");
+        String password=map.get("password");
+       if( userimpl.reset( email,password))
+           return  ResultUtil.sucess();
+        return ResultUtil.error();
     }
 }
