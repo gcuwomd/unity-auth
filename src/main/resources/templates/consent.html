@@ -1,11 +1,11 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="https://www.thymeleaf.org">
 
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Document</title>
-  <link rel="stylesheet" href="assets/style.css">
+  <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 
 <body>
@@ -13,7 +13,7 @@
     <div class="container">
       <section class="header">
         <div>
-          <img src="assets/gcu-womd.png" alt="">
+          <img th:src="@{/image/gcu-womd.png}" alt="">
         </div>
         <h2>网站运维部统一登录平台</h2>
       </section>
@@ -21,24 +21,27 @@
         <section>
           <p>
             是否同意授权网站运维部子系统获取账户
-            <!-- username -->
-            <span></span>
+
+            <span th:text="${principalName}"></span>
             的以下基本信息：</p>
           <ul>
             <li>学号，姓名，联系电话</li>
           </ul>
 
         </section>
-        <form action="POST">
-          <input type="hidden" name="client_id">
-          <input type="hidden" name="state">
-          <input type="hidden" name="user_code">
-          <input type="hidden" name="scope" value="&{scope.scope}" id="${scope.scope}">
+        <form method="post"  th:action="@{/oauth2/authorize}">
+<!--          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
+          <input type="hidden" name="client_id" th:value="${clientId}">
+          <input type="hidden" name="state"  th:value="${state}">
+        <div th:each="scope : ${scopes}">
+          <input type="checkbox" name="scope" th:value="${scope}" th:id="${scope}" th:text="${scope}"/><br/>
+        </div>
           <div class="button-group">
-            <button type="submui">同意授权</button>
-            <button class="reject">拒绝授权</button>
+            <button type="submit">同意授权</button>
+<!--            <button class="reject">拒绝授权</button>-->
           </div>
         </form>
+
       </div>
       <section class="footer">
         <span>该信息用于保证您对子系统的各个功能的正常使用</span><br>
@@ -46,7 +49,7 @@
       </section>
     </div>
   </main>
-  <script src="assets/main.js"></script>
+  <script th:src="@{/js/main.js}"></script>
 </body>
 
 </html>

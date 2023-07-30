@@ -1,7 +1,5 @@
 package com.example.unityauth.config;
-import com.example.unityauth.pojo.LoginUser;
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.example.unityauth.hander.SucessHandler;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -11,48 +9,38 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
-import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
-import org.springframework.security.core.userdetails.User;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.NoOpPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.jackson2.CoreJackson2Module;
-import org.springframework.security.jackson2.SecurityJackson2Modules;
 import org.springframework.security.oauth2.core.AuthorizationGrantType;
 import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.*;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimsContext;
-import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenClaimsSet;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
-import org.springframework.security.provisioning.InMemoryUserDetailsManager;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-
-import java.nio.file.attribute.UserPrincipal;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -84,16 +72,20 @@ public class SecurityConfig {
      * @return
      * @throws Exception
      */
+    private static final String CUSTOM_CONSENT_PAGE_URI = "/oauth2/consent";
     @Bean
     @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(Customizer.withDefaults())
-                ;
 
+        OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
                 //设置授权页
-//                .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage(""));
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class)
+        // 开启OpenID Connect 1.0协议相关端点
+        .oidc(Customizer.withDefaults())
+//         设置自定义用户确认授权页
+        .authorizationEndpoint(authorizationEndpoint -> authorizationEndpoint.consentPage(CUSTOM_CONSENT_PAGE_URI));
+
         http
                 // 当未登录时访问认证端点时重定向至login页面
                 .exceptionHandling((exceptions) -> exceptions
@@ -101,11 +93,13 @@ public class SecurityConfig {
                                 new LoginUrlAuthenticationEntryPoint("/login"),
                                 new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
                         )
+
                 ).oauth2ResourceServer(resourceServer->resourceServer.jwt(Customizer.withDefaults()
 
 
 
                 ));
+
 
         return http.build();
     }
@@ -120,12 +114,11 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login"))
+        http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login").successHandler(new SucessHandler()))
 //        http.formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("login","/css/**","/image/**","/js/**").permitAll()
-                        .anyRequest().authenticated()
-                );
+                        .requestMatchers("login","/css/**","/image/**","/js/**","/getCode").permitAll()
+                        .anyRequest().authenticated());
 
         return http.build();
     }
@@ -281,7 +274,13 @@ public class SecurityConfig {
     @Bean
     public OAuth2TokenCustomizer<JwtEncodingContext> accessTokenCustomizer() {
         return context -> {
+            Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
+            List<String> permissions = new ArrayList<>();
+            for (GrantedAuthority authority : authentication.getAuthorities()) {
+                permissions.add(authority.getAuthority());
+            }
+            System.out.println(permissions);
             System.out.println( context.getPrincipal().getName());
             System.out.println(context.getPrincipal().getPrincipal());
             System.out.println();
