@@ -1,12 +1,10 @@
 package com.example.unityauth.utils;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.util.CollectionUtils;
 
-import java.sql.Time;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -153,6 +151,11 @@ public  class RedisUtil {
     public Object hashGet(String key, String field) {
         return redisTemplate.opsForHash().get(key, field);
     }
+    /**
+     * 获取 hash 表 field 字段
+     * @param key hash 表的键
+     * @return hash 表中 field值
+     */
 
     /**
      * 获取 hash 表所有的值
@@ -207,7 +210,7 @@ public  class RedisUtil {
      * @param value 要设置的值
      * @return 成功 true 失败 false
      */
-    public boolean hastSet(String key, String field, Object value) {
+    public boolean hashSet(String key, String field, Object value) {
         try {
             redisTemplate.opsForHash().put(key, field, value);
             return true;
