@@ -1,10 +1,13 @@
 package com.example.unityauth.config;
 import com.example.unityauth.hander.SucessHandler;
+import com.example.unityauth.utils.RedisUtil;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
+import jakarta.servlet.http.HttpServletRequest;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
@@ -12,6 +15,7 @@ import org.springframework.http.HttpMethod;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.config.Customizer;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.Authentication;
@@ -25,6 +29,7 @@ import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtClaimsSet;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.security.oauth2.server.authorization.*;
+import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
@@ -41,13 +46,17 @@ import java.security.KeyPair;
 import java.security.KeyPairGenerator;
 import java.security.interfaces.RSAPrivateKey;
 import java.security.interfaces.RSAPublicKey;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity(jsr250Enabled = true, securedEnabled = true)
 public class SecurityConfig {
+    @Autowired
+    RedisUtil redisUtil;
 
     /**
      * 这是个Spring security 的过滤器链，默认会配置
@@ -115,7 +124,9 @@ public class SecurityConfig {
     @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http)
             throws Exception {
-        http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login").successHandler(new SucessHandler()))
+        http.formLogin(formLogin->formLogin.loginPage("/login").loginProcessingUrl("/login").successHandler(new SucessHandler())
+                        .defaultSuccessUrl("/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://127.0.0.1:9821",true)
+                        )
 //        http.formLogin(Customizer.withDefaults())
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers(HttpMethod.POST,"/user/**").permitAll()
@@ -129,25 +140,24 @@ public class SecurityConfig {
      * oauth2 用于第三方认证，RegisteredClientRepository 主要用于管理第三方（每个第三方就是一个客户端）
      * @return
      */
-//    @Bean
-//    public RegisteredClientRepository registeredClientRepository() {
-//        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-//                .clientId("messaging-client")
-//                .clientSecret("{noop}secret")
-//                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-//                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-//                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-//                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-//                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
-//                .redirectUri("http://127.0.0.1:5500/authorized")
-//                .scope(OidcScopes.OPENID)
-//                .scope("message.read")
-//                .scope("message.write")
-//                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-//                .build();
-//
-//        return new InMemoryRegisteredClientRepository(registeredClient);
-//    }
+    @Bean
+    public RegisteredClientRepository registeredClientRepository( PasswordEncoder passwordEncoder) {
+        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientId("messaging-client")
+                .clientSecret(passwordEncoder.encode("secret"))
+                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+                .redirectUri("http://127.0.0.1:9821/login/oauth2/code/messaging-client-oidc")
+                .redirectUri("http://127.0.0.1:5500")
+                .scope(OidcScopes.OPENID)
+                .scope("message.read")
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+                .build();
+
+        return new InMemoryRegisteredClientRepository(registeredClient);
+    }
     /**
      * 配置客户端Repository
      *
@@ -156,80 +166,79 @@ public class SecurityConfig {
      * @return 基于数据库的repository
      */
 
-    @Bean
-    public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
-        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                // 客户端id
-                .clientId("messaging-client")
-                // 客户端秘钥，使用密码解析器加密
-                .clientSecret(passwordEncoder.encode("secret"))
-                // 客户端认证方式，基于请求头的认证secret
-                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
-                // 配置资源服务器使用该客户端获取授权时支持的方式
-                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
-                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
-                // 授权码模式回调地址，oauth2.1已改为精准匹配，不能只设置域名，并且屏蔽了localhost
-                .redirectUri("http://127.0.0.1:8080/login/oauth2/code/messaging-client-oidc")
-                // 配置一个百度的域名回调，稍后使用该回调获取code
-                .redirectUri("http://127.0.0.1:5500/authorized")
-                // 该客户端的授权范围，OPENID与PROFILE是IdToken的scope，获取授权时请求OPENID的scope时认证服务会返回IdToken
-                .scope(OidcScopes.OPENID)
-                .scope(OidcScopes.PROFILE)
-                // 自定scope
-                .scope("message.read")
-                .scope("message.write")
-                // 客户端设置，设置用户需要确认授权
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
-                .build();
-
-        // 基于db存储客户端，还有一个基于内存的实现 InMemoryRegisteredClientRepository
-        JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
-
-        // 初始化客户端
-        RegisteredClient repositoryByClientId = registeredClientRepository.findByClientId(registeredClient.getClientId());
-        if (repositoryByClientId == null) {
-            registeredClientRepository.save(registeredClient);
-        }
-        // 设备码授权客户端
-        RegisteredClient deviceClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientId("device-message-client")
-                // 公共客户端
-                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
-                // 设备码授权
-                .authorizationGrantType(AuthorizationGrantType.DEVICE_CODE)
-                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
-                // 自定scope
-                .scope("message.read")
-                .build();
-        RegisteredClient byClientId = registeredClientRepository.findByClientId(deviceClient.getClientId());
-        if (byClientId == null) {
-            registeredClientRepository.save(deviceClient);
-        }
-        return registeredClientRepository;
-    }
+//    @Bean
+//    public RegisteredClientRepository registeredClientRepository(JdbcTemplate jdbcTemplate, PasswordEncoder passwordEncoder) {
+//        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+//                // 客户端id
+//                .clientId("messaging-client")
+//                // 客户端秘钥，使用密码解析器加密
+//                .clientSecret(passwordEncoder.encode("secret"))
+//                // 客户端认证方式，基于请求头的认证secret
+//                .clientAuthenticationMethod(ClientAuthenticationMethod.CLIENT_SECRET_BASIC)
+//                // 配置资源服务器使用该客户端获取授权时支持的方式
+//                .authorizationGrantType(AuthorizationGrantType.AUTHORIZATION_CODE)
+//                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+//                .authorizationGrantType(AuthorizationGrantType.CLIENT_CREDENTIALS)
+//                // 授权码模式回调地址，oauth2.1已改为精准匹配，不能只设置域名，并且屏蔽了localhost
+//                .redirectUri("http://127.0.0.1:9821/login/oauth2/code/messaging-client-oidc")
+//                // 配置一个百度的域名回调，稍后使用该回调获取code
+//                .redirectUri("http://127.0.0.1:5500")
+//                // 该客户端的授权范围，OPENID与PROFILE是IdToken的scope，获取授权时请求OPENID的scope时认证服务会返回IdToken
+//                .scope(OidcScopes.OPENID)
+//                .scope(OidcScopes.PROFILE)
+//                // 自定scope
+//                .scope("message.read")
+//                // 客户端设置，设置用户需要确认授权
+//                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(true).build())
+//                .build();
+//
+//        // 基于db存储客户端，还有一个基于内存的实现 InMemoryRegisteredClientRepository
+//        JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcTemplate);
+//
+//        // 初始化客户端
+//        RegisteredClient repositoryByClientId = registeredClientRepository.findByClientId(registeredClient.getClientId());
+//        if (repositoryByClientId == null) {
+//            registeredClientRepository.save(registeredClient);
+//        }
+////        // 设备码授权客户端
+//        RegisteredClient deviceClient = RegisteredClient.withId(UUID.randomUUID().toString())
+//                .clientId("device-message-client")
+//                // 公共客户端
+//                .clientAuthenticationMethod(ClientAuthenticationMethod.NONE)
+//                // 设备码授权
+//                .authorizationGrantType(AuthorizationGrantType.DEVICE_CODE)
+//                .authorizationGrantType(AuthorizationGrantType.REFRESH_TOKEN)
+//                // 自定scope
+//                .scope("message.read")
+//                .build();
+//        RegisteredClient byClientId = registeredClientRepository.findByClientId(deviceClient.getClientId());
+//        if (byClientId == null) {
+//            registeredClientRepository.save(deviceClient);
+//        }
+//        return registeredClientRepository;
+//    }
 
 
     /**
      配置授权管理服务
 
-     **/
-    @Bean
-    public OAuth2AuthorizationService auth2AuthorizationService(JdbcTemplate jdbcTemplate,RegisteredClientRepository registeredClientRepository){
-        return  new JdbcOAuth2AuthorizationService(jdbcTemplate,registeredClientRepository);
-    }
-    /**
-     * 配置授权认证服务
-     * **/
-    @Bean
-    public OAuth2AuthorizationConsentService oAuth2AuthorizationConsentService(JdbcTemplate jdbcTemplate,RegisteredClientRepository registeredClientRepository){
-        return  new JdbcOAuth2AuthorizationConsentService(jdbcTemplate,registeredClientRepository);
-    }
-    /**
-     *
-     * 用于给access_token签名使用。
-     * @return
-     */
+//     **/
+//    @Bean
+//    public OAuth2AuthorizationService auth2AuthorizationService(JdbcTemplate jdbcTemplate,RegisteredClientRepository registeredClientRepository){
+//        return  new JdbcOAuth2AuthorizationService(jdbcTemplate,registeredClientRepository);
+//    }
+//    /**
+//     * 配置授权认证服务
+//     * **/
+//    @Bean
+//    public OAuth2AuthorizationConsentService oAuth2AuthorizationConsentService(JdbcTemplate jdbcTemplate,RegisteredClientRepository registeredClientRepository){
+//        return  new JdbcOAuth2AuthorizationConsentService(jdbcTemplate,registeredClientRepository);
+//    }
+//    /**
+//     *
+//     * 用于给access_token签名使用。
+//     * @return
+//     */
     @Bean
     public JWKSource<SecurityContext> jwkSource() {
         KeyPair keyPair = generateRsaKey();
@@ -274,22 +283,30 @@ public class SecurityConfig {
 
 
     @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> accessTokenCustomizer() {
+    public OAuth2TokenCustomizer<JwtEncodingContext> accessTokenCustomizer(HttpServletRequest http) {
         return context -> {
             Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-
-            List<String> permissions = new ArrayList<>();
-            for (GrantedAuthority authority : authentication.getAuthorities()) {
-                permissions.add(authority.getAuthority());
-            }
-            System.out.println(permissions);
-            System.out.println( context.getPrincipal().getName());
-            System.out.println(context.getPrincipal().getPrincipal());
-            System.out.println();
-//            JwtClaimsSet.Builder claims = context.getClaims();
+            String websitesId=http.getHeader("websiteId");
             JwtClaimsSet.Builder claims = context.getClaims();
+            if(websitesId!=null){
+                String username=context.getPrincipal().getName();
+                ArrayList<String> arrayList=new ArrayList<>();
+                StringBuffer authorities=new StringBuffer();
+                authorities.append("[");
+                List<Object> list = redisUtil.getListValues(username, 0, -1);
+                for (Object item:list){
+                    authorities.append(redisUtil.hashGet(websitesId,item.toString()));
+                    authorities.append(",");
+                }
+                authorities.deleteCharAt(authorities.length()-1);
+                authorities.append("]");
+
+                claims.claim("authorities",authorities);
+            }
+
+            claims.expiresAt(Instant.now().plusSeconds(60*60*12));
             System.out.println();
-            claims.claim("test","123");
+
 
             // Customize claims
 

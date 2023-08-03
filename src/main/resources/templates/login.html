@@ -17,6 +17,7 @@
         <div class="form-container">
             <form id="form" action="/login" method="POST">
                 <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>
+                <input type="hidden" name="redirect_uri" value="/oauth2/consent" />
                 <div class="form-item">
                     <div class="label-container">
                         <label for="username">学号</label>

@@ -30,7 +30,7 @@ UserService userimpl;
         return "login";
     }
     //授权页面
-    @GetMapping("/oauth2/consent")
+    @GetMapping(value = "/oauth2/consent")
     public String consent(@RequestParam String scope, @RequestParam String client_id, @RequestParam String state, Model model,Principal principal) {
         model.addAttribute("principalName",principal.getName());
         model.addAttribute("scopes", scope.split(" "));

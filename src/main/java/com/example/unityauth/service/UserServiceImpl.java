@@ -1,14 +1,20 @@
 package com.example.unityauth.service;
 
 import com.example.unityauth.mapper.UserMapper;
+import com.example.unityauth.pojo.RoleUser;
+import com.example.unityauth.pojo.UnitySystemApi;
 import com.example.unityauth.pojo.UnityUser;
 import com.example.unityauth.utils.CodeUtil;
 import com.example.unityauth.utils.EmailUtil;
 import com.example.unityauth.utils.RedisUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.authority.AuthorityUtils;
+import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -65,4 +71,25 @@ public class UserServiceImpl implements UserService {
         password=passwordEncoder.encode(password);
         return   userMapper.reset(username,password);
     }
+
+    @Override
+    public User searchUserInfo(String username) {
+       String password= userMapper.userInfoPassword(username).getPassword();
+        List list=userMapper.userInfoRole(username);
+        ArrayList<String>authority =new ArrayList<>();
+        for (Object item : list) {
+            // 对每个元素执行操作
+            authority.add(((RoleUser)item).getRoleId());
+        }
+
+        return new User(username,password,AuthorityUtils.createAuthorityList(authority));
+    }
+
+    @Override
+    public List<UnitySystemApi> getURL(String roelId) {
+        {
+            return  userMapper.userInfoUrl(roelId);
+        }
+    }
+
 }

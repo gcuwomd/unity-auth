@@ -11,8 +11,22 @@
     </select>
     <insert id="register"  >
         insert into unity_user (department_id,username,password,name,phone,email,nick_name,major,grade,class_number,dorm,politicsStatus,avatar)values (
-#{departmentId},#{username},#{password},#{name}, #{phone}, #{email}, #{nickName}, #{major}, #{grade}, #{classNumber}, #{dorm}, #{politicsStatus}, #{avatar}
-
-                                                                                                                                                      )
+#{departmentId},#{username},#{password},#{name}, #{phone}, #{email}, #{nickName}, #{major}, #{grade}, #{classNumber}, #{dorm}, #{politicsStatus}, #{avatar}                                                                                                                                           )
     </insert>
+    <select id="userInfoPassword" resultType="com.example.unityauth.pojo.UnityUser">
+        select password from unity_user where username=#{username}
+    </select>
+    <select id="userInfoRole" resultType="com.example.unityauth.pojo.RoleUser">
+        select role_id from unity_user_role where username=#{username}
+    </select>
+    <select id="userInfoUrl" resultType="com.example.unityauth.pojo.UnitySystemApi">
+        select api_url from unity_system_api where api_id in(select api_id from unity_role_api where role_id =#{roleId} )
+    </select>
+    <select id="userMsg" resultType="com.example.unityauth.pojo.UrlWR">
+        SELECT t1.role_id, t1.website_id, CONCAT( GROUP_CONCAT('"', t2.api_url SEPARATOR '", '), '"') AS url
+        FROM unity_role_api AS t1
+                 JOIN unity_system_api AS t2 ON t1.api_id = t2.api_id
+        GROUP BY t1.role_id, t1.website_id;
+
+    </select>
 </mapper>
