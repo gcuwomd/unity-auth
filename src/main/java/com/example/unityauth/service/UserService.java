@@ -2,15 +2,16 @@ package com.example.unityauth.service;
 
 import com.example.unityauth.pojo.UnitySystemApi;
 import com.example.unityauth.pojo.UnityUser;
+import com.example.unityauth.utils.ResultUtil;
 import org.springframework.security.core.userdetails.User;
 
 import java.util.List;
 
 public interface UserService {
 
-    boolean getCode(String email);
-   public boolean searchUser(String username);
-    String register(UnityUser unityUser, String code, String email);
+    ResultUtil getCode(String email);
+   public ResultUtil searchUser(String username);
+    ResultUtil register(UnityUser unityUser, String code, String email);
 
     boolean reset(String username, String password, String code);
 

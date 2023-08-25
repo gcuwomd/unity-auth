@@ -17,7 +17,7 @@ public class DataToRedis {
     UserMapper userMapper;
 
 
-        @Scheduled(fixedDelay = 60000*60*2) // 每60秒执行一次
+        @Scheduled(fixedDelay = 60000*60*2) //2小时执行一次
         public void execute() {
             // 执行数据库查询，比如获取所有用户
             List list=userMapper.userMsg();

@@ -33,13 +33,14 @@
 <!--          <input type="hidden" th:name="${_csrf.parameterName}" th:value="${_csrf.token}"/>-->
           <input type="hidden" name="client_id" th:value="${clientId}">
           <input type="hidden" name="state"  th:value="${state}">
-        <div th:each="scope : ${scopes}">
-          <input type="checkbox" name="scope" th:value="${scope}" th:id="${scope}" th:text="${scope}"/><br/>
+        <div  >
+          <input type="hidden" name="scope" value="message.read" /><br/>
         </div>
           <div class="button-group">
             <button type="submit">同意授权</button>
 <!--            <button class="reject">拒绝授权</button>-->
           </div>
+
         </form>
 
       </div>

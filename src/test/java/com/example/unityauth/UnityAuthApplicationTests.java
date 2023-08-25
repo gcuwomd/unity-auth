@@ -32,35 +32,18 @@ PasswordEncoder passwordEncoder;
 
 	@Test
 	void contextLoads() {
-		redisTemplate.opsForValue().set("spring","hello spring");
-		System.out.println(redisTemplate.opsForValue().get("spring"));
+		redisUtil.del("2428015329@qq.com");
+		System.out.println(userService.getCode("2428015329@qq.com"));
+		;
 	}
 
 	@Test
 	void oss(){
-	}
-
-	@Test
-	void forget(){
-		System.out.println(userService.searchUser("202110098171"));
-	}
-
-	@Test
-	void reset(){
-		userService.searchUser("202110098171");
-		System.out.println(userService.reset("202110098171","202110098171","1234"));
-	}
-
-	@Test
-	void user(){
-		userService.searchUserInfo("202010089000");
-	}
-
-	@Test
-	void pa(){
 		System.out.println(passwordEncoder.encode("admin123"));
-		;
 	}
+
+
+
 
 
 }

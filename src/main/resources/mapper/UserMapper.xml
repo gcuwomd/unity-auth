@@ -7,14 +7,15 @@
         update unity_user set password=#{password} where username=#{username}
     </update>
     <select id="userExist" resultType="com.example.unityauth.pojo.UnityUser">
-        select email from unity_user where username=#{username}
+        select * from unity_user where username=#{username}
     </select>
     <insert id="register"  >
-        insert into unity_user (department_id,username,password,name,phone,email,nick_name,major,grade,class_number,dorm,politicsStatus,avatar)values (
-#{departmentId},#{username},#{password},#{name}, #{phone}, #{email}, #{nickName}, #{major}, #{grade}, #{classNumber}, #{dorm}, #{politicsStatus}, #{avatar}                                                                                                                                           )
+        insert into unity_user (department_id,username,password,name,phone,email,nick_name,major,grade,class_number,dorm,politicsStatus,avatar)select
+#{departmentId},#{username},#{password},#{name}, #{phone}, #{email}, #{nickName}, #{major}, #{grade}, #{classNumber}, #{dorm}, #{politicsStatus}, #{avatar}
+            WHERE NOT EXISTS (SELECT * FROM unity_user WHERE username = #{username})
     </insert>
     <select id="userInfoPassword" resultType="com.example.unityauth.pojo.UnityUser">
-        select password from unity_user where username=#{username}
+        select * from unity_user where username=#{username}
     </select>
     <select id="userInfoRole" resultType="com.example.unityauth.pojo.RoleUser">
         select role_id from unity_user_role where username=#{username}
@@ -28,5 +29,8 @@
                  JOIN unity_system_api AS t2 ON t1.api_id = t2.api_id
         GROUP BY t1.role_id, t1.website_id;
 
+    </select>
+    <select id="existDepartment" resultType="java.lang.Boolean">
+        SELECT COUNT(*) FROM unity_department WHERE department_id =#{departmentId};
     </select>
 </mapper>

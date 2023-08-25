@@ -39,10 +39,10 @@ public class SucessHandler implements AuthenticationSuccessHandler {
         //获取用户权限，数据，需要遍历
         Object[] authority=authentication.getAuthorities().toArray();
         for(Object item:authority){
+            System.out.println(item.toString());
             redisUtil.pushValue(authentication.getName(),item.toString());
         }
 
-        ;
-        System.out.println(redisUtil.hashGet(authentication.getName(),"1"));
+        response.sendRedirect("/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://127.0.0.1:5173");
     }
 }

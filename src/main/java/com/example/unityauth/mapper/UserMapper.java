@@ -18,5 +18,6 @@ public interface UserMapper  {
    List<RoleUser> userInfoRole(String username);
    List<UnitySystemApi> userInfoUrl(String roleId);
     List<UrlWR>  userMsg();
+    boolean existDepartment(String departmentId);
 
 }

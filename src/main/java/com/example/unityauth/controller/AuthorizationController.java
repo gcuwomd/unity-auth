@@ -3,6 +3,7 @@ package com.example.unityauth.controller;
 import com.example.unityauth.pojo.UnityUser;
 import com.example.unityauth.service.UserService;
 import com.example.unityauth.utils.ResultUtil;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -41,26 +42,19 @@ UserService userimpl;
     @GetMapping("/user/register/code")
     @ResponseBody
     ResultUtil GetCode(@RequestParam  String email){
-        if(userimpl.getCode(email)){
-    //邮箱验证
-            return new ResultUtil(1,"发送成功",null);
-        }
-        return new ResultUtil(0,"发送失败",null);
+   return  userimpl.getCode(email);
     }
     @PostMapping("/user/register")
     @ResponseBody
     ResultUtil register(@RequestBody UnityUser unityUser, @RequestParam String code,String email){
 
-            return ResultUtil.sucess(userimpl.register(unityUser,code,email));
+            return userimpl.register(unityUser,code,email);
     }
     @GetMapping("/user/reset/code")
     @ResponseBody
     ResultUtil resetCode(@RequestParam  String username){
-            if (userimpl.searchUser(username))
-                return ResultUtil.sucess();
 
-
-        return ResultUtil.error();
+        return  userimpl.searchUser(username);
     }
     @PostMapping("/user/reset")
     @ResponseBody
@@ -72,4 +66,6 @@ UserService userimpl;
            return  ResultUtil.sucess();
         return ResultUtil.error();
     }
+
+
 }

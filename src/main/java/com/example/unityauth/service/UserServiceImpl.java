@@ -7,6 +7,7 @@ import com.example.unityauth.pojo.UnityUser;
 import com.example.unityauth.utils.CodeUtil;
 import com.example.unityauth.utils.EmailUtil;
 import com.example.unityauth.utils.RedisUtil;
+import com.example.unityauth.utils.ResultUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
@@ -28,46 +29,57 @@ public class UserServiceImpl implements UserService {
     @Autowired
     RedisUtil redisUtil;
     String code;
-    public boolean getCode(String email) {
-        code= CodeUtil.createCode();
+    @Override
+    public ResultUtil getCode(String email) {
+        long time=redisUtil.getExpire(email,TimeUnit.SECONDS);
+        if(time!=-2){
+            return new ResultUtil(200,time+"s后重试",null);
+        }
+        code= CodeUtil.createCode(); ;
         emailUtil.sendEmail(email,"验证码",code);
         redisUtil.set(email,code);
         redisUtil.setExpire(email,300,TimeUnit.SECONDS);
-        return true;
+        return  new ResultUtil(200,"发送成功",null);
     }
     @Override
-    public String register(UnityUser unityUser, String code, String email) {
+    public ResultUtil register(UnityUser unityUser, String code, String email) {
+         if((!userMapper.existDepartment(unityUser.getDepartmentId())) ) {
+             return new ResultUtil(403,"无此部门编号", null) ;
+         }
         if (redisUtil.get(email)==(null)){
-            return "验证码失效";
+            return new ResultUtil(403,"验证码过期", null) ;
         }
         if(redisUtil.get(email).equals(code)){
             redisUtil.del(email);
             unityUser.setPassword(passwordEncoder.encode(unityUser.getPassword()));
-            userMapper.register(unityUser);
-            return "注册成功";
+            if(!userMapper.register(unityUser))
+             return  new ResultUtil(403,"用户已存在",null);
         }
 
 
-        return "验证码错误";
+        return new ResultUtil(200,"注册成功",null);
     }
-
-    public boolean searchUser(String username){
+@Override
+    public ResultUtil searchUser(String username){
+    long time=redisUtil.getExpire("R"+username,TimeUnit.SECONDS);
+    if(time!=-2){
+        return new ResultUtil(200,time+"s后重试",null);
+    }
         UnityUser user=userMapper.userExist(username);
         if(user!=null){
             code=CodeUtil.createCode();
             emailUtil.sendEmail(user.getEmail(),"验证码",code);
-            redisUtil.set(username,code);
-            redisUtil.setExpire(username,300,TimeUnit.SECONDS);
-            return true;
+            redisUtil.set("R"+username,code);
+            redisUtil.setExpire("R"+username,300,TimeUnit.SECONDS);
         }
 
 
-        return false;
+        return  new ResultUtil(200,"发送成功",null);
     }
     @Override
     public boolean reset(String username, String password, String code) {
-        if (redisUtil.get(username)==null) return false;
-        if(!redisUtil.get(username).equals(code)) return  false;
+        if (redisUtil.get("R"+username)==null) return false;
+        if(!redisUtil.get("R"+username).equals(code)) return  false;
         password=passwordEncoder.encode(password);
         return   userMapper.reset(username,password);
     }
