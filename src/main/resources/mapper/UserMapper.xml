@@ -6,6 +6,9 @@
     <update id="reset">
         update unity_user set password=#{password} where username=#{username}
     </update>
+    <update id="setDefaultRole">
+        insert into unity_user_role (username) value (#{useranme})
+    </update>
     <select id="userExist" resultType="com.example.unityauth.pojo.UnityUser">
         select * from unity_user where username=#{username}
     </select>

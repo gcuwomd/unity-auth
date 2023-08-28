@@ -20,4 +20,5 @@ public interface UserMapper  {
     List<UrlWR>  userMsg();
     boolean existDepartment(String departmentId);
 
+    boolean setDefaultRole(String username);
 }

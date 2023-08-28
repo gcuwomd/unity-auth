@@ -43,6 +43,6 @@ public class SucessHandler implements AuthenticationSuccessHandler {
             redisUtil.pushValue(authentication.getName(),item.toString());
         }
 
-        response.sendRedirect("/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://127.0.0.1:5173");
+        response.sendRedirect("/oauth2/authorize?response_type=code&client_id=messaging-client&scope=message.read&redirect_uri=http://43.139.117.216:6432");
     }
 }

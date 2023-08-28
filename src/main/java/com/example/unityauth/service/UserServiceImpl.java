@@ -13,6 +13,7 @@ import org.springframework.security.core.authority.AuthorityUtils;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -42,6 +43,7 @@ public class UserServiceImpl implements UserService {
         return  new ResultUtil(200,"发送成功",null);
     }
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public ResultUtil register(UnityUser unityUser, String code, String email) {
          if((!userMapper.existDepartment(unityUser.getDepartmentId())) ) {
              return new ResultUtil(403,"无此部门编号", null) ;
@@ -55,8 +57,7 @@ public class UserServiceImpl implements UserService {
             if(!userMapper.register(unityUser))
              return  new ResultUtil(403,"用户已存在",null);
         }
-
-
+        userMapper.setDefaultRole(unityUser.getUsername());
         return new ResultUtil(200,"注册成功",null);
     }
 @Override
