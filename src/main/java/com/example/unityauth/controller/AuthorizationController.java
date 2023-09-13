@@ -56,6 +56,11 @@ UserService userimpl;
 
         return  userimpl.searchUser(username);
     }
+    /**
+     * 兼容短信的邮箱发送
+     *
+     *
+     * */
     @PostMapping("/user/reset")
     @ResponseBody
     ResultUtil reset(@RequestBody Map<String,String> map){
@@ -66,6 +71,22 @@ UserService userimpl;
            return  ResultUtil.sucess();
         return ResultUtil.error();
     }
+    @GetMapping("/user/register/message/code")
+    @ResponseBody
+    ResultUtil GetMessageCode(@RequestParam  String phone){
+        return  userimpl.getCodeByMessage(phone);
+    }
+    @PostMapping("/user/message/register")
+    @ResponseBody
+    ResultUtil registerByMessage(@RequestBody UnityUser unityUser, @RequestParam String code,String phone){
 
+        return userimpl.registerByMessage(unityUser,code,phone);
+    }
+    @GetMapping("/user/reset/message/code")
+    @ResponseBody
+    ResultUtil resetCodeByMessage(@RequestParam String username){
+
+        return  userimpl.searchUserByMessage(username);
+    }
 
 }

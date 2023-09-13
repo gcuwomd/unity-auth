@@ -17,4 +17,12 @@ public interface UserService {
 
     User searchUserInfo(String username);
     List<UnitySystemApi> getURL(String roelId);
+
+    ResultUtil getCodeByMessage(String phone);
+
+    ResultUtil registerByMessage(UnityUser unityUser, String code, String email);
+
+    ResultUtil searchUserByMessage(String username);
+
+    boolean resetByMessage(String username, String password, String code);
 }

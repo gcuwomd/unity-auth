@@ -183,7 +183,7 @@ public class SecurityConfig {
                 // 授权码模式回调地址，oauth2.1已改为精准匹配，不能只设置域名，并且屏蔽了localhost
                 .redirectUri("http://43.139.117.216:9821/login/oauth2/code/messaging-client-oidc")
                 // 配置一个百度的域名回调，稍后使用该回调获取code
-                .redirectUri("http://43.139.117.216:6432")
+                .redirectUri("https://nav.bamdev.space")
                 // 该客户端的授权范围，OPENID与PROFILE是IdToken的scope，获取授权时请求OPENID的scope时认证服务会返回IdToken
                 .scope(OidcScopes.OPENID)
                 .scope(OidcScopes.PROFILE)
